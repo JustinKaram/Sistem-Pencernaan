@@ -262,13 +262,28 @@ function searchMateri() {
 
 function highlightKeyword(keyword) {
   const content = document.getElementById('content'); // Pastikan konten punya ID 'content'
-  const innerHTML = content.innerHTML;
-  const regex = new RegExp(`(${keyword})`, 'gi');
+  const regex = new RegExp(`(?<!\\w)${keyword}(?!\\w)`, 'gi');
 
-  content.innerHTML = innerHTML.replace(regex, '<span class="bg-yellow-300">$1</span>');
+  // Loop hanya untuk node teks, hindari atribut HTML
+  function highlightNodes(node) {
+      if (node.nodeType === 3) { // Node teks
+          const match = node.nodeValue.match(regex);
+          if (match) {
+              const span = document.createElement('span');
+              span.innerHTML = node.nodeValue.replace(regex, '<span class="bg-yellow-300">$&</span>');
+              node.replaceWith(span);
+          }
+      } else if (node.nodeType === 1) { // Node elemen
+          node.childNodes.forEach(highlightNodes);
+      }
+  }
+
+  content.childNodes.forEach(highlightNodes);
 
   const firstHighlight = document.querySelector('.bg-yellow-300');
   if (firstHighlight) {
       firstHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 }
+
+
